@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>HYROX Logboek</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #12161c;
+    --card: #1b212a;
+    --border: #2a323d;
+    --text: #e8eaed;
+    --muted: #8b95a1;
+    --accent: #ffb020;
+    --green: #4caf6d;
+    --amber: #d9a441;
+    --red: #e05c5c;
+    --race: #ff7a3d;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+  body { padding-bottom: 40px; }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: var(--bg);
+    padding: 16px 16px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing: 1px;
+    margin: 0 0 8px;
+    text-align: center;
+  }
+  .progress-wrap { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .progress-track { flex: 1; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s; }
+  .progress-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); white-space: nowrap; }
+
+  .week-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .nav-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .nav-btn:active { background: #242c38; }
+  .nav-btn:disabled { opacity: 0.3; }
+  .week-info {
+    flex: 1;
+    text-align: center;
+    min-width: 0;
+  }
+  .week-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 19px;
+    letter-spacing: 0.5px;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .week-dates {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 1px;
+  }
+  .week-jump {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 8px;
+  }
+  .week-jump select {
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+
+  .content { padding: 14px 16px 0; max-width: 600px; margin: 0 auto; }
+  .week-intro {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-bottom: 12px;
+    line-height: 1.4;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+  }
+  .card-head-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .badge-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 15px;
+    background: #262e3a;
+    border-radius: 8px;
+    padding: 4px 9px;
+    flex-shrink: 0;
+  }
+  .card-type {
+    font-size: 14px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .intensity-pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 20px;
+    flex-shrink: 0;
+    letter-spacing: 0.5px;
+  }
+  .intensity-licht { background: rgba(76,175,109,0.15); color: var(--green); }
+  .intensity-gemiddeld { background: rgba(217,164,65,0.15); color: var(--amber); }
+  .intensity-zwaar { background: rgba(224,92,92,0.15); color: var(--red); }
+  .intensity-race { background: rgba(255,122,61,0.18); color: var(--race); }
+
+  .status-check {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    flex-shrink: 0;
+    margin-left: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+  }
+  .status-check.filled {
+    background: var(--green);
+    border-color: var(--green);
+    color: #0d1a10;
+  }
+
+  .card-body {
+    display: none;
+    padding: 0 16px 16px;
+    border-top: 1px solid var(--border);
+  }
+  .card.open .card-body { display: block; }
+  .card.open .chevron { transform: rotate(90deg); }
+
+  .workout-ref {
+    margin: 12px 0;
+    padding: 10px 12px;
+    background: var(--bg);
+    border-radius: 10px;
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .workout-ref div { margin-bottom: 2px; }
+
+  .field { margin-bottom: 12px; }
+  .field label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .field input, .field textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-size: 16px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .field textarea {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    resize: vertical;
+    min-height: 44px;
+  }
+  .field input:focus, .field textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .section-label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted);
+    font-weight: 700; margin: 12px 0 6px;
+  }
+  .weights-wrap { display: flex; flex-direction: column; gap: 6px; margin-bottom: 4px; }
+  .weight-row { display: grid; grid-template-columns: 1fr 100px; gap: 8px; align-items: center; }
+  .weight-label { font-size: 13px; color: var(--text); line-height: 1.3; }
+  .weight-input {
+    background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px;
+    padding: 8px 10px; color: var(--text); font-size: 14px; font-family: 'JetBrains Mono', monospace; width: 100%;
+  }
+  .weight-input:focus { outline: none; border-color: var(--accent); }
+
+  .rounds-wrap { margin: 4px 0 12px; display: flex; flex-direction: column; gap: 6px; }
+  .round-row-single { display: grid; grid-template-columns: 34px 1fr; gap: 8px; align-items: center; }
+  .round-label { font-size: 11px; font-weight: 700; color: var(--muted); }
+  .round-input {
+    background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px;
+    padding: 10px 12px; color: var(--text); font-size: 15px; font-family: 'JetBrains Mono', monospace; width: 100%;
+  }
+  .round-input:focus { outline: none; border-color: var(--accent); }
+
+  .chevron-row {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .chevron {
+    font-size: 13px;
+    color: var(--muted);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+
+  .saved-flash {
+    position: fixed;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--green);
+    color: #0d1a10;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 8px 16px;
+    border-radius: 20px;
+    opacity: 0;
+    transition: opacity 0.25s, transform 0.25s;
+    pointer-events: none;
+    z-index: 50;
+  }
+  .saved-flash.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .week-progress-mini {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin: 4px 0 14px;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>HYROX LOGBOEK</h1>
+  <div class="progress-wrap">
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="progress-label" id="progressLabel">0/116</div>
+  </div>
+  <div class="week-nav">
+    <button class="nav-btn" id="prevBtn">&#8249;</button>
+    <div class="week-info">
+      <div class="week-title" id="weekTitle">—</div>
+      <div class="week-dates" id="weekDates">—</div>
+    </div>
+    <button class="nav-btn" id="nextBtn">&#8250;</button>
+  </div>
+  <div class="week-jump">
+    <select id="weekSelect"></select>
+  </div>
+</div>
+
+<div class="content">
+  <div class="week-intro" id="weekIntro"></div>
+  <div class="week-progress-mini" id="weekProgressMini"></div>
+  <div id="cardsWrap"></div>
+</div>
+
+<div class="saved-flash" id="savedFlash">Opgeslagen</div>
+
+<script>
+const WEEKS = [{"label": "WEEK 1 — RICHTING GENT: HERSTART", "dates": "28 september – 2 oktober 2026", "trainings": [{"num": 1, "intensity": "zwaar", "type": "ENGINE — Wall Balls & Burpees", "workout": ["Ladder, for time:", "5-10-15-20 Wall Balls", "5-10-15-20 Jumping Burpees (na elke WB-set)"]}, {"num": 2, "intensity": "licht", "type": "AEROBIC — Lange duurloop (trail-opbouw)", "workout": ["80 min duurloop, rustig tempo"]}, {"num": 3, "intensity": "zwaar", "type": "POWER", "workout": ["5x5: Front Squat", "4x8: Ring Rows of Pull-ups", "3x12 elk been: Walking Lunges (DB)", "90 sec rust"]}, {"num": 4, "intensity": "gemiddeld", "type": "FOUNDATION — Stations 1, 2, 6", "workout": ["EMOM x 12, roterend:", "Min 1: 15 Cal Ski", "Min 2: 12m Sled Push AHAP", "Min 3: 40m Farmer Carry"]}, {"num": 5, "intensity": "zwaar", "type": "COMPLETE", "workout": ["Chipper, 1 ronde voor tijd:", "30 Wall Balls", "25 Jumping Burpees", "20m Sandbag Lunge", "100m Farmer Carry", "400m Run"]}]}, {"label": "WEEK 2 — OPBOUW", "dates": "5 – 9 oktober 2026", "trainings": [{"num": 1, "intensity": "zwaar", "type": "POWER", "workout": ["EMOM x 12, roterend (kracht):", "Min 1: 5 Deadlift (zwaar)", "Min 2: 8 DB Overhead Press", "Min 3: 10 Goblet Reverse Lunge elk been"]}, {"num": 2, "intensity": "gemiddeld", "type": "FOUNDATION — Stations 3, 5, 7", "workout": ["12 min AMRAP:", "150m Row", "10m Sled Pull", "12 Sandbag Lunge"]}, {"num": 3, "intensity": "zwaar", "type": "ENGINE — Wall Balls & Burpees", "workout": ["EMOM x 16, afwisselend:", "Min 1: 12 Wall Balls", "Min 2: 10 Jumping Burpees"]}, {"num": 4, "intensity": "licht", "type": "AEROBIC — Langste duurloop (trail-opbouw)", "workout": ["95-100 min duurloop, rustig tempo"]}, {"num": 5, "intensity": "zwaar", "type": "COMPLETE", "workout": ["Descending ladder, for time:", "25-20-15-10-5 Wall Balls", "25-20-15-10-5 Jumping Burpees", "*30m Sandbag Lunge na elke stap", "Afsluiter: 100m Farmer Carry"]}]}, {"label": "WEEK 3 — OPBOUW (vervolg) + TAPER TRAIL RUN", "dates": "12 – 16 oktober 2026", "trainings": [{"num": 1, "intensity": "zwaar", "type": "ENGINE — Wall Balls & Burpees", "workout": ["5 rondes:", "20 Wall Balls", "15 Jumping Burpees", "400m Run"]}, {"num": 2, "intensity": "gemiddeld", "type": "FOUNDATION — Stations 1, 2, 6", "workout": ["Oplopend volume, 3 rondes:", "R1: 100m Ski / 10m Sled Push AHAP / 30m Farmer Carry", "R2: 150m / 12m / 45m", "R3: 200m / 15m / 60m"]}, {"num": 3, "intensity": "zwaar", "type": "POWER", "workout": ["3x8: Back Squat (zwaarder)", "3x10: DB Bench Press", "3x12: Ring Rows", "90 sec rust"]}, {"num": 4, "intensity": "licht", "type": "AEROBIC — Afbouw (taper trail run)", "workout": ["35-40 min lichte, rustige loop", "Mobiliteit/stretching na afloop"]}, {"num": 5, "intensity": "zwaar", "type": "COMPLETE", "workout": ["EMOM x 15, roterend:", "Min 1: 10 Wall Balls", "Min 2: 8 Jumping Burpees", "Min 3: 20m Sandbag Lunge", "Afsluiter: 2 x 100m Farmer Carry"]}]}, {"label": "WEEK 4 — HERSTEL NA TRAIL RUN + OPBOUW", "dates": "19 – 23 oktober 2026", "trainings": [{"num": 1, "intensity": "zwaar", "type": "POWER", "workout": ["4x:", "Split Squat Jump x 10", "Barbell RDL x 8", "30m Sled Sprint", "90 sec rust"]}, {"num": 2, "intensity": "licht", "type": "AEROBIC — Actief herstel", "workout": ["30 min zeer rustige loop of fietstocht", "Geen tempo-elementen"]}, {"num": 3, "intensity": "zwaar", "type": "ENGINE — Wall Balls & Burpees", "workout": ["EMOM x 20, afwisselend:", "Wall Balls / Jumping Burpees / Max Cal Ski"]}, {"num": 4, "intensity": "licht", "type": "FOUNDATION (licht — herstel)", "workout": ["3 RFT (rustig):", "150m Row", "10m Sled Pull", "15m Sandbag Lunge", "200m Run"]}, {"num": 5, "intensity": "zwaar", "type": "COMPLETE (rustig)", "workout": ["3 RFT (rustig):", "300m Run", "12 Wall Balls", "10 Jumping Burpees", "60m Farmer Carry"]}]}, {"label": "WEEK 5 — LAATSTE WEEK VOOR SPANJE", "dates": "26 – 30 oktober 2026", "trainings": [{"num": 1, "intensity": "zwaar", "type": "POWER", "workout": ["4x:", "Back Squat (unbroken)", "Max Cal Bike Sprint", "100m Farmer Carry"]}, {"num": 2, "intensity": "licht", "type": "AEROBIC (loopfocus)", "workout": ["50 min progressive run", "Verhoog tempo elke 10 min"]}, {"num": 3, "intensity": "zwaar", "type": "ENGINE — Wall Balls & Burpees", "workout": ["8 x 200m Run", "10 Wall Balls + 10 Jumping Burpees na elke run", "90 sec rust"]}, {"num": 4, "intensity": "gemiddeld", "type": "FOUNDATION — Stations 1, 2, 6", "workout": ["Chipper, 1 ronde voor tijd:", "300m Ski", "25m Sled Push AHAP", "100m Farmer Carry", "400m Run"]}, {"num": 5, "intensity": "zwaar", "type": "COMPLETE — PIEKMOMENT: Mini HYROX Test", "workout": ["±40% racevolume, all-out, tijd opnemen:", "1) 400m Ski", "2) 25m Sled Push AHAP", "3) 25m Sled Pull", "4) 35m Burpee Broad Jump", "5) 400m Row", "6) 100m Farmer Carry", "7) 40m Sandbag Lunge", "8) 40 Wall Balls", "350m Run tussen elk station", "Extra: max unbroken Wall Balls + max unbroken Jumping Burpees"]}]}, {"label": "WEEK 6 — SPANJE: 100% LOOP FOCUS", "dates": "2 – 6 november 2026", "trainings": [{"num": 1, "intensity": "zwaar", "type": "ENGINE", "workout": ["6 x 3:00 min hard / 2:00 min jog", "Na élke interval: 15 Jumping Burpees"]}, {"num": 2, "intensity": "licht", "type": "AEROBIC", "workout": ["40 min rustige duurloop (thuis, voor vertrek)"]}, {"num": 3, "intensity": "zwaar", "type": "ENGINE", "workout": ["Piramide sprint: 400m-300m-200m-100m-100m-200m-300m-400m", "Afsluiter: Jumping Burpee EMOM 8 min"]}, {"num": 4, "intensity": "licht", "type": "AEROBIC", "workout": ["40-45 min ontdekkingsloop", "Rustig tempo, geniet van de omgeving"]}, {"num": 5, "intensity": "licht", "type": "AEROBIC", "workout": ["50-60 min lange rustige duurloop", "Gesprekstempo, geniet ervan"]}]}, {"label": "WEEK 7 — SPANJE / TERUGKEER", "dates": "9 – 13 november 2026", "trainings": [{"num": 1, "intensity": "zwaar", "type": "POWER", "workout": ["4x:", "Goblet Squat x 15", "DB Bench Press x 12", "15m Sled Push AHAP", "90 sec rust"]}, {"num": 2, "intensity": "licht", "type": "AEROBIC", "workout": ["30-35 min fartlek", "Wissel makkelijk/hard om de 2-3 min naar gevoel"]}, {"num": 3, "intensity": "zwaar", "type": "COMPLETE", "workout": ["4 RFT:", "400m Run", "20 Wall Balls", "15 Jumping Burpees", "25m Sandbag Lunge", "100m Farmer Carry"]}, {"num": 4, "intensity": "licht", "type": "AEROBIC (reisdag)", "workout": ["20-30 min lichte shake-out jog", "Of volledige rust als de reis dat vraagt"]}, {"num": 5, "intensity": "gemiddeld", "type": "FOUNDATION", "workout": ["4 RFT:", "500m Row", "15 Wall Balls", "12 KB Deadlift", "12 Jumping Burpees"]}]}, {"label": "WEEK 8 — OPBOUW NA SPANJE", "dates": "16 – 20 november 2026", "trainings": [{"num": 1, "intensity": "zwaar", "type": "POWER", "workout": ["12 min AMRAP (kracht, gematigd-zwaar gewicht):", "5 Back Squat", "5 DB Push Press", "10m Sled Push AHAP"]}, {"num": 2, "intensity": "gemiddeld", "type": "FOUNDATION — Stations 3, 5, 7", "workout": ["EMOM x 12, roterend:", "Min 1: 200m Row", "Min 2: 15m Sled Pull", "Min 3: 25m Sandbag Lunge"]}, {"num": 3, "intensity": "zwaar", "type": "ENGINE — Wall Balls & Burpees", "workout": ["EMOM x 18, afwisselend:", "Wall Balls / Jumping Burpees / rust"]}, {"num": 4, "intensity": "licht", "type": "AEROBIC (loopfocus)", "workout": ["55 min duurloop", "Laatste 10 min tempo"]}, {"num": 5, "intensity": "zwaar", "type": "COMPLETE — PIEKMOMENT: Mini HYROX (alle 8 stations)", "workout": ["±50% racevolume, 400m Run tussen elk station:", "1) 500m Ski", "2) 30m Sled Push AHAP", "3) 30m Sled Pull", "4) 40m Burpee Broad Jump", "5) 500m Row", "6) 100m Farmer Carry", "7) 50m Sandbag Lunge", "8) 50 Wall Balls"]}]}, {"label": "WEEK 9 — OPBOUW (vervolg)", "dates": "23 – 27 november 2026", "trainings": [{"num": 1, "intensity": "zwaar", "type": "ENGINE — Wall Balls & Burpees", "workout": ["6 x 400m Run", "12 Wall Balls + 12 Jumping Burpees na elke run", "2:00 min rust"]}, {"num": 2, "intensity": "gemiddeld", "type": "FOUNDATION — Stations 1, 2, 6", "workout": ["Oplopend volume, 3 rondes:", "R1: 150m Ski / 12m Sled Push AHAP / 50m Farmer Carry", "R2: 200m / 15m / 70m", "R3: 250m / 18m / 90m"]}, {"num": 3, "intensity": "zwaar", "type": "POWER", "workout": ["4x:", "Deadlift x 6 (zwaar)", "DB Push Press x 8", "15m Sled Push AHAP", "90 sec rust"]}, {"num": 4, "intensity": "licht", "type": "AEROBIC (loopfocus)", "workout": ["60 min duurloop", "Negative split — tweede helft iets sneller"]}, {"num": 5, "intensity": "zwaar", "type": "COMPLETE", "workout": ["5 rondes, elk 30 sec max effort / 30 sec rust:", "Max Wall Balls", "Max Jumping Burpees", "*200m Run tussen elke ronde"]}]}, {"label": "WEEK 10 — ACCELERATE", "dates": "30 november – 4 december 2026", "trainings": [{"num": 1, "intensity": "zwaar", "type": "POWER", "workout": ["4x:", "Bulgarian Split Squat x 10 elk been", "DB Bench Press x 10", "20m Sled Push AHAP", "90 sec rust"]}, {"num": 2, "intensity": "licht", "type": "AEROBIC (loopfocus)", "workout": ["45 min run", "4 x 1:00 min op racetempo, 2:00 min rust"]}, {"num": 3, "intensity": "zwaar", "type": "ENGINE — Wall Balls & Burpees", "workout": ["5 x 3:00 min AMRAP:", "10 Wall Balls", "10 Jumping Burpees", "Max Cal Bike"]}, {"num": 4, "intensity": "gemiddeld", "type": "FOUNDATION — Stations 3, 5, 7", "workout": ["14 min AMRAP:", "200m Row", "15m Sled Pull", "20 Sandbag Lunge"]}, {"num": 5, "intensity": "zwaar", "type": "COMPLETE", "workout": ["Ladder, for time: 40-30-20-10", "Wall Balls + Jumping Burpees (gecombineerd per stap)", "*35m Sandbag Lunge en 120m Farmer Carry na elke stap"]}]}, {"label": "WEEK 11 — PIEKWEEK", "dates": "7 – 11 december 2026", "trainings": [{"num": 1, "intensity": "zwaar", "type": "ENGINE — Wall Balls & Burpees", "workout": ["8 x 200m Run @ race effort", "10 Wall Balls + 10 Jumping Burpees na elke run", "90 sec rust"]}, {"num": 2, "intensity": "gemiddeld", "type": "FOUNDATION — Stations 1, 2, 6", "workout": ["3 RFT:", "300m Ski", "20m Sled Push AHAP", "80m Farmer Carry", "400m Run"]}, {"num": 3, "intensity": "zwaar", "type": "POWER (piek, lager volume)", "workout": ["3x zwaar:", "Back Squat x 6", "Bench Press x 8", "Max Cal Bike 30 sec", "2:00 min rust"]}, {"num": 4, "intensity": "licht", "type": "AEROBIC (loopfocus)", "workout": ["50 min run", "Laatste 15 min op racegevoel"]}, {"num": 5, "intensity": "zwaar", "type": "COMPLETE — PIEKMOMENT & LAATSTE GROTE TEST: Mini HYROX (alle 8 stations)", "workout": ["±65% racevolume, all-out, tijd opnemen:", "1) 650m Ski", "2) 35m Sled Push AHAP", "3) 35m Sled Pull", "4) 55m Burpee Broad Jump", "5) 650m Row", "6) 130m Farmer Carry", "7) 65m Sandbag Lunge", "8) 65 Wall Balls", "400m Run tussen elk station", "Extra: max unbroken Wall Balls + max unbroken Jumping Burpees"]}]}, {"label": "WEEK 12 — RACEWEEK: HYROX GENT", "dates": "14 – 19 december 2026", "trainings": [{"num": 1, "intensity": "licht", "type": "FOUNDATION (licht)", "workout": ["3 RFT:", "300m Row", "10 Wall Balls", "10 Jumping Burpees", "100m Farmer Carry"]}, {"num": 2, "intensity": "licht", "type": "AEROBIC (licht)", "workout": ["30 min rustige jog", "Afsluiter: 4 x 20 sec strides"]}, {"num": 3, "intensity": "licht", "type": "ENGINE (race-activatie)", "workout": ["2 rondes, elk op ~50% inspanning:", "50m Sled Push", "50m Sled Pull", "80m Burpee Broad Jump", "15 Wall Balls", "80m Farmer Carry"]}, {"num": 4, "intensity": "licht", "type": "RUST / actief herstel", "workout": ["20 min wandelen of losse fietstocht", "Focus op slaap en voeding"]}, {"num": 5, "intensity": "licht", "type": "LICHTE ACTIVATIE", "workout": ["15 min jog", "10 Wall Balls", "10 Jumping Burpees", "Mobiliteit"]}]}, {"label": "RACEDAG — HYROX GENT", "dates": "zaterdag 19 december 2026", "trainings": [{"num": 1, "intensity": "race", "type": "HYROX Gent — Race Day", "workout": ["Warm-up: 10 min jog + mobiliteit", "2-3 lichte reps van elke beweging", "Race strategie: rustig starten, HYROX straft wie te snel begint"]}]}];
+
+let currentWeek = 0;
+let totalLogged = 0;
+const TOTAL_SESSIONS = WEEKS.reduce((a,w) => a + w.trainings.length, 0);
+
+const savedFlash = document.getElementById('savedFlash');
+function flashSaved() {
+  savedFlash.classList.add('show');
+  clearTimeout(flashSaved._t);
+  flashSaved._t = setTimeout(() => savedFlash.classList.remove('show'), 1100);
+}
+
+function keyFor(weekIdx, num) { return 'hyrox_log_w' + weekIdx + '_t' + num; }
+
+async function loadEntry(weekIdx, num) {
+  try {
+    const raw = localStorage.getItem(keyFor(weekIdx, num));
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+async function saveEntry(weekIdx, num, data) {
+  try {
+    localStorage.setItem(keyFor(weekIdx, num), JSON.stringify(data));
+    flashSaved();
+  } catch (e) { console.error('save failed', e); }
+}
+function isFilled(e) {
+  if (!e) return false;
+  const roundsFilled = Array.isArray(e.rounds) && e.rounds.some(r => (typeof r === 'string' ? r : (r && (r.tijd || r.gewicht))));
+  const weightsFilled = Array.isArray(e.weights) && e.weights.some(w => w);
+  return !!(e.tijd || e.gewicht || e.tempo || e.notities || e.result || roundsFilled || weightsFilled);
+}
+
+async function loadLastWeek() {
+  try {
+    const raw = localStorage.getItem('hyrox_log_meta_lastWeek');
+    if (raw) {
+      const idx = parseInt(raw, 10);
+      if (idx >= 0 && idx < WEEKS.length) return idx;
+    }
+  } catch (e) {}
+  return 0;
+}
+async function saveLastWeek(idx) {
+  try { localStorage.setItem('hyrox_log_meta_lastWeek', String(idx)); } catch (e) {}
+}
+
+function debounce(fn, wait) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); };
+}
+
+function populateWeekSelect() {
+  const sel = document.getElementById('weekSelect');
+  sel.innerHTML = '';
+  WEEKS.forEach((w, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = (i+1) + '. ' + w.label.replace(/^WEEK \d+\s*—\s*/, '').slice(0, 34);
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', () => renderWeek(parseInt(sel.value, 10)));
+}
+
+function detectRounds(workoutLines) {
+  const text = (workoutLines.slice(0, 2) || []).join(' ');
+  const patterns = [/(\d+)\s*RFT/i, /(\d+)\s*Rondes?(?!\w)/i, /(\d+)\s*Rounds?(?!\w)/i];
+  for (const pat of patterns) {
+    const m = text.match(pat);
+    if (m) {
+      const n = parseInt(m[1], 10);
+      if (n > 1 && n <= 10) return n;
+    }
+  }
+  return null;
+}
+const SKIP_LINE_PATTERNS = [
+  /^\d+\s*RFT\b/i,
+  /^\d+\s*Rondes?\b/i,
+  /^\d+\s*Rounds?\b/i,
+  /^\d+x:?\s*$/i,
+  /^\(?E\d?MOM\b.*:?\s*$/i,
+  /^\d+[\s\-]*Min(ute)?s?\s*AMRAP\b/i,
+  /^For Time:?\s*[\d\-]*\s*$/i,
+  /^\*?\s*[\d:.]*\s*(min(ute)?s?|sec(onds?)?)?\s*(rust|rest)\b/i,
+];
+function metricForMovement(text) {
+  const t = text.toLowerCase();
+  if (/\b(kg|lbs|kb|db|sandbag|barbell|dumbbell|kettlebell|plate|sled|carry|wall\s*ball)\b/.test(t)) return { label: 'Gewicht', placeholder: 'gewicht' };
+  if (/\b(row|ski|bike|erg|assault)\b/.test(t)) return { label: 'Niveau/weerstand', placeholder: 'niveau' };
+  if (/\b(run|jog|sprint|strides?)\b/.test(t)) return { label: 'Tempo/snelheid', placeholder: 'tempo' };
+  return { label: 'Gewicht', placeholder: 'gewicht' };
+}
+function classifyWorkoutLines(lines) {
+  return lines.map(line => ({
+    text: line,
+    isMovement: !SKIP_LINE_PATTERNS.some(p => p.test(line.trim())),
+  }));
+}
+function isRunType(typeStr) {
+  const t = (typeStr || '').toLowerCase();
+  return t.includes('aerobic') || t.includes('rust');
+}
+
+async function buildCard(training, weekIdx) {
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  const head = document.createElement('div');
+  head.className = 'card-head';
+
+  const left = document.createElement('div');
+  left.className = 'card-head-left chevron-row';
+  const chev = document.createElement('div');
+  chev.className = 'chevron';
+  chev.textContent = '\u25B8';
+  const numBadge = document.createElement('div');
+  numBadge.className = 'badge-num';
+  numBadge.textContent = 'T' + training.num;
+  const typeEl = document.createElement('div');
+  typeEl.className = 'card-type';
+  typeEl.textContent = training.type;
+  left.appendChild(chev);
+  left.appendChild(numBadge);
+  left.appendChild(typeEl);
+
+  const right = document.createElement('div');
+  right.style.display = 'flex';
+  right.style.alignItems = 'center';
+  right.style.gap = '8px';
+  right.style.flexShrink = '0';
+  const pill = document.createElement('div');
+  pill.className = 'intensity-pill intensity-' + training.intensity;
+  pill.textContent = training.intensity === 'race' ? 'RACE' : training.intensity.toUpperCase();
+  const check = document.createElement('div');
+  check.className = 'status-check';
+  right.appendChild(pill);
+  right.appendChild(check);
+
+  head.appendChild(left);
+  head.appendChild(right);
+  card.appendChild(head);
+
+  const body = document.createElement('div');
+  body.className = 'card-body';
+
+  const ref = document.createElement('div');
+  ref.className = 'workout-ref';
+  training.workout.forEach(line => {
+    const d = document.createElement('div');
+    d.textContent = line;
+    ref.appendChild(d);
+  });
+  body.appendChild(ref);
+
+  const isRace = training.intensity === 'race';
+  const runType = !isRace && isRunType(training.type);
+  const numRounds = (isRace || runType) ? null : detectRounds(training.workout);
+
+  let tijdInput = null, tempoInput = null;
+  let weightInputs = [];
+  let roundInputs = [];
+  let resultInput = null;
+
+  if (isRace || runType) {
+    const fieldDefs = isRace
+      ? [['tijd', 'Eindtijd'], ['gewicht', 'Rang / categorie']]
+      : [['tijd', 'Tijd'], ['gewicht', 'Tempo / snelheid']];
+    const twoCol = document.createElement('div');
+    twoCol.className = 'two-col';
+    const inputsTmp = {};
+    fieldDefs.forEach(([key, label]) => {
+      const f = document.createElement('div');
+      f.className = 'field';
+      const l = document.createElement('label');
+      l.textContent = label;
+      const i = document.createElement('input');
+      i.type = 'text'; i.inputMode = 'text'; i.placeholder = '\u2014';
+      f.appendChild(l); f.appendChild(i);
+      twoCol.appendChild(f);
+      inputsTmp[key] = i;
+    });
+    body.appendChild(twoCol);
+    tijdInput = inputsTmp.tijd;
+    tempoInput = inputsTmp.gewicht; // reused var name, holds 2nd field (rang or tempo)
+  } else {
+    const movements = classifyWorkoutLines(training.workout).filter(l => l.isMovement);
+    if (movements.length) {
+      const wLabel = document.createElement('div');
+      wLabel.className = 'section-label';
+      wLabel.textContent = 'Gewicht / niveau / tempo per beweging';
+      body.appendChild(wLabel);
+      const weightsWrap = document.createElement('div');
+      weightsWrap.className = 'weights-wrap';
+      movements.forEach(mv => {
+        const row = document.createElement('div');
+        row.className = 'weight-row';
+        const label = document.createElement('div');
+        label.className = 'weight-label';
+        label.textContent = mv.text;
+        const metric = metricForMovement(mv.text);
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'weight-input';
+        input.placeholder = metric.placeholder;
+        input.title = metric.label;
+        row.appendChild(label);
+        row.appendChild(input);
+        weightsWrap.appendChild(row);
+        weightInputs.push(input);
+      });
+      body.appendChild(weightsWrap);
+    }
+
+    if (numRounds) {
+      const pLabel = document.createElement('div');
+      pLabel.className = 'section-label';
+      pLabel.textContent = 'Tijd per ronde';
+      body.appendChild(pLabel);
+      const roundsWrap = document.createElement('div');
+      roundsWrap.className = 'rounds-wrap';
+      for (let r = 1; r <= numRounds; r++) {
+        const row = document.createElement('div');
+        row.className = 'round-row-single';
+        const label = document.createElement('div');
+        label.className = 'round-label';
+        label.textContent = 'R' + r;
+        const rTijd = document.createElement('input');
+        rTijd.type = 'text'; rTijd.placeholder = 'Tijd'; rTijd.className = 'round-input';
+        row.appendChild(label);
+        row.appendChild(rTijd);
+        roundsWrap.appendChild(row);
+        roundInputs.push(rTijd);
+      }
+      body.appendChild(roundsWrap);
+    } else {
+      const f = document.createElement('div');
+      f.className = 'field';
+      const l = document.createElement('label');
+      l.textContent = 'Eindresultaat (tijd / score)';
+      resultInput = document.createElement('input');
+      resultInput.type = 'text'; resultInput.placeholder = '\u2014';
+      f.appendChild(l); f.appendChild(resultInput);
+      body.appendChild(f);
+    }
+  }
+
+  const notesField = document.createElement('div');
+  notesField.className = 'field';
+  const notesLabel = document.createElement('label');
+  notesLabel.textContent = 'Notities';
+  const notesArea = document.createElement('textarea');
+  notesArea.rows = 2;
+  notesArea.placeholder = 'Hoe voelde het, wat viel op...';
+  notesField.appendChild(notesLabel);
+  notesField.appendChild(notesArea);
+  body.appendChild(notesField);
+
+  card.appendChild(body);
+
+  const entry = await loadEntry(weekIdx, training.num);
+  if (entry) {
+    if (isRace || runType) {
+      if (tijdInput) tijdInput.value = entry.tijd || '';
+      if (tempoInput) tempoInput.value = entry.gewicht || entry.tempo || '';
+    } else {
+      if (weightInputs.length && Array.isArray(entry.weights)) {
+        entry.weights.forEach((w, idx) => { if (weightInputs[idx]) weightInputs[idx].value = w || ''; });
+      }
+      if (numRounds && Array.isArray(entry.rounds)) {
+        entry.rounds.forEach((rd, idx) => {
+          if (roundInputs[idx]) roundInputs[idx].value = (typeof rd === 'string' ? rd : (rd && rd.tijd) || '');
+        });
+      } else if (resultInput) {
+        resultInput.value = entry.result || '';
+      }
+    }
+    notesArea.value = entry.notities || '';
+    if (isFilled(entry)) { check.classList.add('filled'); check.textContent = '\u2713'; totalLogged++; }
+  }
+
+  function collectData() {
+    const data = { notities: notesArea.value.trim() };
+    if (isRace || runType) {
+      data.tijd = tijdInput.value.trim();
+      if (isRace) data.gewicht = tempoInput.value.trim();
+      else data.tempo = tempoInput.value.trim();
+    } else {
+      if (weightInputs.length) data.weights = weightInputs.map(i => i.value.trim());
+      if (numRounds) data.rounds = roundInputs.map(i => i.value.trim());
+      else if (resultInput) data.result = resultInput.value.trim();
+    }
+    return data;
+  }
+
+  const doSave = debounce(async () => {
+    const data = collectData();
+    const wasFilled = check.classList.contains('filled');
+    const nowFilled = isFilled(data);
+    if (nowFilled && !wasFilled) { totalLogged++; check.classList.add('filled'); check.textContent = '\u2713'; }
+    if (!nowFilled && wasFilled) { totalLogged--; check.classList.remove('filled'); check.textContent = ''; }
+    updateProgress();
+    updateWeekMiniProgress();
+    await saveEntry(weekIdx, training.num, data);
+  }, 450);
+
+  const watchList = [notesArea];
+  if (isRace || runType) { watchList.push(tijdInput, tempoInput); }
+  else {
+    weightInputs.forEach(i => watchList.push(i));
+    if (numRounds) roundInputs.forEach(i => watchList.push(i));
+    else if (resultInput) watchList.push(resultInput);
+  }
+  watchList.forEach(el => el.addEventListener('input', doSave));
+
+  head.addEventListener('click', () => card.classList.toggle('open'));
+
+  return { card, check };
+}
+
+function updateProgress() {
+  const pct = TOTAL_SESSIONS ? Math.round((totalLogged / TOTAL_SESSIONS) * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = totalLogged + '/' + TOTAL_SESSIONS;
+}
+
+let currentWeekChecks = [];
+function updateWeekMiniProgress() {
+  const done = currentWeekChecks.filter(c => c.classList.contains('filled')).length;
+  document.getElementById('weekProgressMini').textContent = done + ' / ' + currentWeekChecks.length + ' gelogd deze week';
+}
+
+async function renderWeek(idx) {
+  currentWeek = idx;
+  saveLastWeek(idx);
+  const week = WEEKS[idx];
+  document.getElementById('weekTitle').textContent = week.label;
+  document.getElementById('weekDates').textContent = week.dates;
+  document.getElementById('weekIntro').textContent = '';
+  document.getElementById('weekSelect').value = idx;
+
+  document.getElementById('prevBtn').disabled = idx === 0;
+  document.getElementById('nextBtn').disabled = idx === WEEKS.length - 1;
+
+  const wrap = document.getElementById('cardsWrap');
+  wrap.innerHTML = '';
+  currentWeekChecks = [];
+
+  for (const training of week.trainings) {
+    const { card, check } = await buildCard(training, idx);
+    wrap.appendChild(card);
+    currentWeekChecks.push(check);
+  }
+  updateWeekMiniProgress();
+}
+
+document.getElementById('prevBtn').addEventListener('click', () => {
+  if (currentWeek > 0) renderWeek(currentWeek - 1);
+});
+document.getElementById('nextBtn').addEventListener('click', () => {
+  if (currentWeek < WEEKS.length - 1) renderWeek(currentWeek + 1);
+});
+
+async function init() {
+  populateWeekSelect();
+  // preload totalLogged by scanning all weeks quietly (best-effort, non-blocking feel)
+  for (let wi = 0; wi < WEEKS.length; wi++) {
+    for (const t of WEEKS[wi].trainings) {
+      const e = await loadEntry(wi, t.num);
+      if (isFilled(e)) totalLogged++;
+    }
+  }
+  updateProgress();
+  const startWeek = await loadLastWeek();
+  await renderWeek(startWeek);
+}
+
+init();
+</script>
+</body>
+</html>
